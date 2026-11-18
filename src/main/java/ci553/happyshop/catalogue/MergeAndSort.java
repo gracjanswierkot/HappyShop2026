@@ -1,6 +1,7 @@
 package ci553.happyshop.catalogue;
-
+import java.util.Collections;
 import java.util.ArrayList;
+
 
 public class MergeAndSort {
 
@@ -27,5 +28,6 @@ public class MergeAndSort {
                     newProduct.getStockQuantity());
             Trolley.add(copyOfProduct);
         }
+        Collections.sort(Trolley);
         }
     }

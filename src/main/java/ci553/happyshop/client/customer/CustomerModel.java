@@ -23,6 +23,8 @@ public class CustomerModel {
 
     private Product searchResult =null; // product found from search
     private Trolley trolley =  new OrangisedTrolley(); // holds the products currently in the customer's trolley
+    // Notice window shown when products have insufficient stock
+    private RemoveProductNotifier removeProductNotifier;
 
     // Data passed to CustomerView for UI updates (including search, trolley and receipt page)
     private String searchResultImageName = "imageHolder.jpg";
@@ -74,12 +76,14 @@ public class CustomerModel {
     }
 
     void addToTrolley(){
+        closeProductNotifier();
         if(searchResult != null){
             // Add the selected product to the trolley.
             // Currently this simply appends the product to the end of the list.
             // TODO: Improve the organisation of the trolley (see class Trolley).
             trolley.addProduct(searchResult);
             // Build a formatted string so the trolley contents can be displayed in the UI
+            trolley.getProducts();
             trolleyContentsText = ProductListFormatter.buildString(trolley.getProducts());
         }
         else{
@@ -88,6 +92,9 @@ public class CustomerModel {
         }
         receiptContentsText =""; // Clear receipt to switch back to trolleyPage (receipt shows only when not empty)
         updateView();
+    }
+
+    private void closeProductNotifier() {
     }
 
     public void checkOut()  {
@@ -132,6 +139,17 @@ public class CustomerModel {
                 // 2. Trigger a message window to notify the customer about the insufficient stock, rather than directly changing displayLaSearchResult.
                 //You can use the provided RemoveProductNotifier class and its showRemovalMsg method for this purpose.
                 //remember close the message window where appropriate (using method closeNotifierWindow() of RemoveProductNotifier class)
+
+                for(Product p : insufficientProducts){
+                    trolley.getProducts().removeIf(t -> t.getProductId().equals(p.getProductId()));
+                }
+                trolleyContentsText = ProductListFormatter.buildString(trolley.getProducts());
+                
+                closeNotifier();
+                removeProductNotifier = new RemoveProductNotifier();
+                removeProductNotifier.cusView = cusView;
+                removeProductNotifier.showRemovalMsg(errorMsg.toString());
+                
                 searchResultProductText = "Checkout failed due to insufficient stock for the following products:\n" + errorMsg.toString();
                 System.out.println("stock is not enough");
             }
@@ -141,6 +159,12 @@ public class CustomerModel {
             System.out.println("Your trolley is empty");
         }
         updateView();
+    }
+    private void closeNotifier(){
+        if(removeProductNotifier != null){
+            removeProductNotifier.closeNotifierWindow();
+            removeProductNotifier = null;
+        }
     }
 
     /**
